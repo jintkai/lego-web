@@ -1,25 +1,40 @@
 <template>
   <div>
     <div>
-      <el-button @click="()=>{showFormDialog=true}">创建项目</el-button>
+      <el-button @click="()=>{showFormDialog=true}">创建用例</el-button>
     </div>
     <div>
-      <el-table :data="projectList" style="width:100%;"
-                @row-click="rowClick">
+      <el-table :data="testCaseList" style="width:100%;"
+                >
         <el-table-column
           prop="id"
           width="100px"
           label="ID">
         </el-table-column>
         <el-table-column
-          prop="projectName"
-          label="项目名称"
+          prop="caseName"
+          label="用例名称"
         >
         </el-table-column>
+        <el-table-column prop="caseUrl" label="URL地址"></el-table-column>
+        <el-table-column prop="methodType" label="方法类型">
+          <template slot-scope="scope">
+            <span >{{ getMehodTypeByValue(scope.row.methodType).name }}</span>
+          </template>
+        </el-table-column>
         <el-table-column
-          prop="status"
+          prop="caseStatus"
           label="状态"
         >
+          <template slot-scope="scope">
+            <span>{{getStatusByValue(scope.row.caseStatus).name}}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间"></el-table-column>
+        <el-table-column prop="option" label="操作">
+          <template slot-scope="scope">
+            <el-button>调试</el-button>
+          </template>
         </el-table-column>
       </el-table>
       <div style="float:right;">
@@ -38,7 +53,7 @@
 
     <div>
       <el-dialog :visible.sync="showFormDialog" @before-close="()=>{showFormDialog=false}">
-        <project-form :visible.sync="showFormDialog" @callback="formCallBack"></project-form>
+        <test-case-form :visible.sync="showFormDialog" @callback="formCallBack"></test-case-form>
       </el-dialog>
     </div>
 
@@ -46,38 +61,45 @@
 </template>
 
 <script>
-  import ProjectForm from "./ProjectForm";
+  import TestCaseForm from "./TestCaseForm";
   import $http from '../../util/http'
+  import {mapGetters} from 'vuex'
 
   export default {
-    components: {ProjectForm},
-    name: "index",
+    components: {TestCaseForm},
+    name: "TestCase",
     data() {
       return {
-        projectList: [],
+        testCaseList: [],
         page: 1,
         pageSize: 10,
         total: 0,
-
         showFormDialog: false
       }
     },
+    computed:{
+      ...mapGetters({
+        getMehodTypeByValue:'testcase/getMethodTypeByValue',
+        getParamTypeByValue:'testcase/getParamsTypeByValue',
+        getStatusByValue:'testcase/getStatusByValue',
+      })
+    },
     mounted() {
-      this.getProjectList();
+      this.getTestCaseList();
     },
     methods: {
-      getProjectList() {
+      getTestCaseList() {
         $http({
-          url: './api/project/' + this.page + '/' + this.pageSize,
-          data: {},
+          url: './api/testcase/' + this.page + '/' + this.pageSize,
+          data: {projectId:this.$route.params.projectid},
           method: 'POST'
         }).then(response => {
-          this.projectList = response.data.list
+          this.testCaseList = response.data.list
           this.total = response.data.total
         }).catch(err => {
           this.$notify({
             type: 'error',
-            title: '获取项目列表失败',
+            title: '获取用例列表失败',
             message: err
           })
         })
@@ -87,19 +109,18 @@
        */
       formCallBack(res) {
         if (res.success) {
-          this.getProjectList()
+          this.getTestCaseList()
         }
       },
       handleSizeChange(vSize) {
         this.pageSize = vSize
-        this.getProjectList()
+        this.getTestCaseList()
       },
       handleCurrentChange(vPage) {
         this.page = vPage
-        this.getProjectList()
+        this.getTestCaseList()
       },
       rowClick(row, event, column) {
-        console.log(row.id)
         this.$router.push({name: 'Project', params: {projectid: row.id}})
       }
     }

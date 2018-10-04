@@ -13,7 +13,7 @@
       <el-option
         v-for="item in projectList"
         :key="item.id"
-        :label="item.projectName+item.id"
+        :label="item.projectName"
         :value="item.id">
       </el-option>
     </el-select>
@@ -32,29 +32,29 @@
         project:null
       }
     },
+    mounted(){
+      this.remoteMethod('')
+    },
     methods: {
       remoteMethod(query) {
-        if (query.trim() !== '') {
+          let _this = this;
           this.loading = true;
           $http({
-            url: './api/project/vague/' + query.trim()
+            method:'post',
+            url: './api/project/vague?key='+query.trim(),
           }).then(res => {
             this.projectList = res.data
             this.loading = false
           }).catch(err => {
-            this.$nofity({
+            _this.$notify({
               type: 'error',
               title: '查询项目失败',
               message: err.msg
             })
           })
 
-        } else {
-          this.projectList = [];
-        }
       },
       change(){
-        console.log(1)
         this.$emit('input',this.project)
       }
     }

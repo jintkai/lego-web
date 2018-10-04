@@ -13,13 +13,16 @@
         <el-table-column
           prop="dbName"
           label="数据库名称"
+          width="200px"
         >
         </el-table-column>
-        <el-table-column prop="dbType" label="类型">
+        <el-table-column prop="dbType" label="类型" width="100px">
+          <template slot-scope="scope">
+            <span>{{getTypeByValue_Database(scope.row.dbType).name}}</span>
+          </template>
         </el-table-column>
-        <el-table-column prop="dbUrl" label="url"></el-table-column>
-        <el-table-column prop="dbUser" label="用户名"></el-table-column>
-        <el-table-column prop="projectName" label="所属项目"></el-table-column>
+        <el-table-column prop="dbUser" label="用户名" width="100px"></el-table-column>
+        <el-table-column prop="dbUrl" label="url" :show-overflow-tooltip="true"></el-table-column>
       </el-table>
       <div style="float:right;">
         <el-pagination
@@ -35,9 +38,11 @@
 
     </div>
 
-    <div>
+    <div v-if="showFormDialog">
       <el-dialog :visible.sync="showFormDialog" @before-close="()=>{showFormDialog=false}">
-        <data-base-form :visible.sync="showFormDialog" @callback="formCallBack"></data-base-form>
+        <data-base-form :visible.sync="showFormDialog"
+                        :init-form="{projectId:this.$route.params.projectid}"
+                        @callback="formCallBack"></data-base-form>
       </el-dialog>
     </div>
 
@@ -47,7 +52,7 @@
 <script>
   import DataBaseForm from "./DataBaseForm";
   import $http from '../../util/http'
-
+  import {mapGetters,mapState} from 'vuex'
   export default {
     components: {DataBaseForm},
     name: "database",
@@ -57,18 +62,23 @@
         page: 1,
         pageSize: 10,
         total: 0,
-
-        showFormDialog: false
+        showFormDialog: false,
       }
+    },
+    computed:{
+      ...mapGetters({
+        getTypeByValue_Database:'database/getTypeByValue'
+      })
     },
     mounted() {
       this.getDatabaseList();
+
     },
     methods: {
       getDatabaseList() {
         $http({
           url: './api/database/' + this.page + '/' + this.pageSize,
-          data: {},
+          data: {projectId:this.$route.params.projectid},
           method: 'POST'
         }).then(response => {
           this.databaseList = response.data.list

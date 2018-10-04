@@ -15,9 +15,14 @@
           label="参数名"
         >
         </el-table-column>
-        <el-table-column prop="projectName" label="所属项目">
+        <el-table-column prop="type" label="类型">
+          <template slot-scope="scope">
+            <span >{{ getTypeByValue_Params(scope.row.type).name }}</span>
+          </template>
         </el-table-column>
-        <el-table-column prop="type" label="类型"></el-table-column>
+        <el-table-column prop="databaseName" label="所属数据库"></el-table-column>
+        <el-table-column prop="paramsExpression" label="详细配置"></el-table-column>
+        <el-table-column prop="updateTime" label="更新时间"></el-table-column>
       </el-table>
       <div style="float:right;">
         <el-pagination
@@ -33,9 +38,10 @@
 
     </div>
 
-    <div>
+    <div v-if="showFormDialog">
       <el-dialog :visible.sync="showFormDialog" @before-close="()=>{showFormDialog=false}">
-        <params-form :visible.sync="showFormDialog" @callback="formCallBack"></params-form>
+        <params-form :visible.sync="showFormDialog"
+                     :init-form="{projectId:this.$route.params.projectid}" @callback="formCallBack"></params-form>
       </el-dialog>
     </div>
 
@@ -44,11 +50,12 @@
 
 <script>
   import ParamsForm from "./ParamsForm";
+  import {mapGetters} from "vuex";
   import $http from '../../util/http'
 
   export default {
     components: {ParamsForm},
-    name: "database",
+    name: "params",
     data() {
       return {
         dataList: [],
@@ -61,12 +68,20 @@
     },
     mounted() {
       this.getList();
+      console.log(this.$store.state.params)
+
+    },
+    computed: {
+      ...mapGetters(
+          {getTypeByValue_Params: 'params/getTypeByValue'}
+      )
     },
     methods: {
+      //getTypeByValue:this.$store.getters['params/getTypeByValue'],
       getList() {
         $http({
           url: './api/params/' + this.page + '/' + this.pageSize,
-          data: {},
+          data: {projectId:this.$route.params.projectid},
           method: 'POST'
         }).then(response => {
           this.dataList = response.data.list
